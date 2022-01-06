@@ -5,6 +5,8 @@ Alpine linux based Docker image which contains the following tools:
 * gcloud sdk
 * mysql client
 * rsync
+* azcopy
+* gpg
 
 Useful for mysqldump in container environments like [Googles Kubernetes Engine](https://cloud.google.com/kubernetes-engine).
 

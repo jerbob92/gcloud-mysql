@@ -1,14 +1,18 @@
-FROM google/cloud-sdk:344.0.0-alpine
+ARG GO_VERSION=1.17
+ARG ALPINE_VERSION=3.14
+ARG AZCOPY_VERSION=10.13.0
 
-ARG MYSQL_CLIENT_VERSION=10.5.9-r0
-ARG RSYNC_VERSION=3.2.3-r1
+FROM golang:$GO_VERSION-alpine$ALPINE_VERSION as build
+WORKDIR /azcopy
+ARG AZCOPY_VERSION
+RUN wget "https://github.com/Azure/azure-storage-azcopy/archive/v$AZCOPY_VERSION.tar.gz" -O src.tgz
+RUN tar xf src.tgz --strip 1 \
+ && go build -o azcopy \
+ && ./azcopy --version
 
-COPY entrypoint.sh /
+FROM quay.io/monotek/gcloud-mysql:master-13
 
-RUN apk add --no-cache mysql-client=$MYSQL_CLIENT_VERSION rsync=${RSYNC_VERSION} && \
-    rm -rf /var/cache/apk/* && \
-    chmod +x /entrypoint.sh
+RUN apk add --no-cache gnupg && \
+    rm -rf /var/cache/apk/*
 
-USER cloudsdk
-
-ENTRYPOINT ["/entrypoint.sh"]
+COPY --from=build /azcopy/azcopy /usr/local/bin
